@@ -81,21 +81,19 @@ def main():
     device = torch.device("cuda" if use_cuda else "cpu")
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
-    train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=True, download=True,
-                       transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=args.batch_size, shuffle=True, **kwargs)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=False, transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
+    train_data = torch.load('train.pt')
+    test_data = torch.load('test.pt')
+    
+    n_rows, time_bins, freq_bins = list(train_data[0].shape)
 
+    train_loader = zip(train_data[0].reshape(len(train_data[0]), 1, time_bins, freq_bins).split(batch_size),
+                       train_data[1].split(batch_size))
+    
+    test_loader = zip(test_data[0].reshape(len(test_data[0]), 1, time_bins, freq_bins).split(batch_size),
+                      test_data[1].split(batch_size))
+
+    
     model = Net().to(device)
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
