@@ -66,7 +66,9 @@ def get_stft_ims(audiopath, binsize=2**12):
 
     ims = resize(ims,(100,512)) ## resize spectrogram to have constant bins
     ims = ims/np.nanmax(ims) ## normalize amplitiude
-
+    ims[np.isnan(ims)] = 0 ## handle nans
+    ims[ims<0] = 0 ## get rid of -inf
+    ims[ims>1] = 1 ## get rid of inf
     return ims
 
 def plot_ims(ims, plotpath=None, colormap="jet"):
@@ -101,15 +103,17 @@ def plot_ims(ims, plotpath=None, colormap="jet"):
 
     return ims
 
-def make_plots(df, n_samples=10, prefix='', path=''):
+def make_plots(df, n_samples=-1, prefix='', path=''):
     """
     save n_samples of spectrograms from dataframe
     """
+    if n_samples==-1:
+        n_samples = df.shape[0]
     for wav_file in df.filename.sample(n_samples):
         ims = get_stft_ims(path+wav_file)
         plot_ims(ims,'figs/'+prefix+wav_file.replace('.wav','.png').split('/')[1])
 
-def generate_stft_data(df, n_train=1000, n_test=100):
+def generate_stft_data(df, n_train=2000, n_test=500):
     """
     save n_samples of spectrograms as pytorch data from dataframe
     """
@@ -120,10 +124,14 @@ def generate_stft_data(df, n_train=1000, n_test=100):
     test_data = []
     test_targets = []
 
-    for ix, row in df.sample(n_train+n_test).iterrows():
+    for ix, row in df.sample(n_train+n_test).reset_index().iterrows():
         wav_file = row.filename
         ims = get_stft_ims(path+wav_file)
-        target = int(row.gender=='female')
+        if np.any(np.isnan(ims)):
+            continue
+        if not np.isfinite(ims).all():
+            continue
+        target = int(row.gender=='male')
         if ix<n_train:
             train_data.append(ims)
             train_targets.append(target)
@@ -137,9 +145,9 @@ def generate_stft_data(df, n_train=1000, n_test=100):
     test_targets = np.array(test_targets)
 
     train_data = torch.tensor(train_data, dtype=torch.float32)
-    train_targets = torch.tensor(train_targets, dtype=torch.float32)
+    train_targets = torch.tensor(train_targets, dtype=torch.int32)
     test_data = torch.tensor(test_data, dtype=torch.float32)
-    test_targets = torch.tensor(test_targets, dtype=torch.float32)
+    test_targets = torch.tensor(test_targets, dtype=torch.int32)
 
     torch.save((train_data,train_targets),open('train.pt','wb'))
     torch.save((test_data,test_targets),open('test.pt','wb'))
@@ -148,17 +156,20 @@ def generate_stft_data(df, n_train=1000, n_test=100):
 if __name__  == '__main__':
 
     ## location of uncompressed data
-    path = '/home/troydsvm/common_voice/cv_corpus_v1/'
+    path = '/media/hdd/work/data/common_voice/cv_corpus_v1/'
 
-    df = pd.read_csv(path+'cv-valid-test.csv')
+    df = pd.read_csv(path+'cv-valid-train.csv')
 
     df.filename = df.filename.str.replace('.mp3','.wav')
     
     male = df[df.gender=='male']
     female = df[df.gender=='female']
 
-    #make_plots(male,prefix='male-',path=path)
-    #make_plots(female,prefix='female-',path=path)
+    # male = male.iloc[:10]
+    # female = female.iloc[:10]
+    
+    # make_plots(male,prefix='male-',path=path)
+    # make_plots(female,prefix='female-',path=path)
 
     df = pd.concat([male,female])
 
