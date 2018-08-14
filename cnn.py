@@ -20,14 +20,15 @@ class Net(nn.Module):
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2))
-        self.fc1 = nn.Linear(102400, 50)
-        self.fc2 = nn.Linear(50, num_classes)
+        self.fc1 = nn.Linear(102400, num_classes)
+        #self.fc2 = nn.Linear(50, num_classes)
         
     def forward(self, x):
         out = self.layer1(x)
         out = self.layer2(out)
         out = out.reshape(out.size(0), -1)
-        out = self.fc2(self.fc1(out))
+        #out = self.fc2(self.fc1(out))
+        out = self.fc1(out)
         return out
 
 # class Net(nn.Module):

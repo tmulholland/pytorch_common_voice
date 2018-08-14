@@ -113,7 +113,7 @@ def make_plots(df, n_samples=-1, prefix='', path=''):
         ims = get_stft_ims(path+wav_file)
         plot_ims(ims,'figs/'+prefix+wav_file.replace('.wav','.png').split('/')[1])
 
-def generate_stft_data(df, n_train=2000, n_test=500):
+def generate_stft_data(df, n_train=9000, n_test=1000):
     """
     save n_samples of spectrograms as pytorch data from dataframe
     """
@@ -125,6 +125,8 @@ def generate_stft_data(df, n_train=2000, n_test=500):
     test_targets = []
 
     for ix, row in df.sample(n_train+n_test).reset_index().iterrows():
+        if ix%100==0:
+            print('ix:',ix,'percent complete:',ix/(ntrain+n_test))
         wav_file = row.filename
         ims = get_stft_ims(path+wav_file)
         if np.any(np.isnan(ims)):
