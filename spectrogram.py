@@ -113,7 +113,7 @@ def make_plots(df, n_samples=-1, prefix='', path=''):
         ims = get_stft_ims(path+wav_file)
         plot_ims(ims,'figs/'+prefix+wav_file.replace('.wav','.png').split('/')[1])
 
-def generate_stft_data(df, n_train=9000, n_test=1000):
+def generate_stft_data(df, n_train=18000, n_test=2000):
     """
     save n_samples of spectrograms as pytorch data from dataframe
     """
@@ -125,8 +125,8 @@ def generate_stft_data(df, n_train=9000, n_test=1000):
     test_targets = []
 
     for ix, row in df.sample(n_train+n_test).reset_index().iterrows():
-        if ix%100==0:
-            print('ix:',ix,'percent complete:',ix/(ntrain+n_test))
+        if ix%1000==0:
+            print('ix:',ix,'percent complete:', 100*ix/(n_train+n_test))
         wav_file = row.filename
         ims = get_stft_ims(path+wav_file)
         if np.any(np.isnan(ims)):
@@ -167,13 +167,13 @@ if __name__  == '__main__':
     male = df[df.gender=='male']
     female = df[df.gender=='female']
 
-    # male = male.iloc[:10]
-    # female = female.iloc[:10]
+    male = male.iloc[:10]
+    female = female.iloc[:10]
     
-    # make_plots(male,prefix='male-',path=path)
-    # make_plots(female,prefix='female-',path=path)
+    make_plots(male,prefix='male-',path=path)
+    make_plots(female,prefix='female-',path=path)
 
-    df = pd.concat([male,female])
+    # df = pd.concat([male,female])
 
     
-    generate_stft_data(df)
+    # generate_stft_data(df)
