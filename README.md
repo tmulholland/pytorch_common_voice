@@ -1,9 +1,13 @@
 ## Dependencies
+```
 pytorch
 matplotlib
 scikit-image
 pandas
 scipy
+```
+![alt text](https://raw.githubusercontent.com/tmulholland/pytorch_common_voice/master/figs/diff-example.png)
+
 
 ```
 Train Epoch: 1 [0/9024 (0%)]	Loss: 0.769631
